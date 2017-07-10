@@ -1,0 +1,36 @@
+#!/bin/bash
+
+current_brightness=$(xrandr --verbose | grep -iA5 eDP | tail -1 | awk '{print $2}')
+current_brightness=$(echo "$current_brightness * 10" | bc)
+current_brightness=${current_brightness%.*}
+command=$1
+step=$2
+
+if [ "$command" != "inc" -a "$command" != "dec" ]
+then
+    echo "Usage: backlight <inc|dec> <step>"
+    exit 1
+elif [ "$step" -gt "9" -a "$step" -lt "1" ]
+then
+    echo "Use step between 1 to 9"
+    exit 1
+elif [ "$command" == "inc" -a "$(($step+$current_brightness))" -gt 9 ] 
+then
+    echo "Step was too big"
+    exit 1
+elif [ "$command" == "dec" -a "$(($current_brightness-$step))" -lt 1 ]
+then
+    echo "Step was too big"
+    exit 1
+fi
+
+if [ "$command" == "inc" ]
+then
+    xrandr --output eDP-1 --brightness 0.$(($current_brightness+$step))
+elif [ "$command" == "dec" ]
+then
+    xrandr --output eDP-1 --brightness 0.$(($current_brightness-$step))
+fi
+
+exit 0
+
